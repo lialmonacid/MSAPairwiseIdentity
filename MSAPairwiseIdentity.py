@@ -76,14 +76,21 @@ def SequenceLengthWithoutGaps(sequence):
             length = length + 1
     return length
 
-def CalculateIdenticalCharacters(sequence_1,sequence_2):
+def CalculateIdenticalAndNonIdenticalCharacters(sequence_1,sequence_2):
     assert len(sequence_1) == len(sequence_2)
     
     count_of_identical_characters = 0
+    count_of_non_identical_characters = 0
+    count_of_characters_facing_gap = 0
     for i in range(0,len(sequence_1)):
-        if sequence_1[i] != "-" and sequence_2[i] != "-" and sequence_1[i] == sequence_2[i]:
-            count_of_identical_characters = count_of_identical_characters + 1 
-    return count_of_identical_characters
+        if sequence_1[i] != "-" and sequence_2[i] != "-" and sequence_1[i] != "X" and sequence_2[i] != "X" and sequence_1[i] == sequence_2[i]:
+            count_of_identical_characters = count_of_identical_characters + 1
+        elif (sequence_1[i] != "-" and sequence_2[i] != "-" and sequence_1[i] != sequence_2[i]) or (sequence_1[i] == "X" and sequence_2[i] == "X"):
+            count_of_non_identical_characters = count_of_non_identical_characters + 1
+        elif (sequence_1[i] == "-" and sequence_2[i] != "-") or (sequence_1[i] != "-" and sequence_2[i] == "-"):
+            count_of_characters_facing_gap = count_of_characters_facing_gap + 1
+
+    return count_of_identical_characters,count_of_non_identical_characters,count_of_characters_facing_gap
 
 # Parse command line
 SetOptions(sys.argv[1:])
@@ -97,9 +104,9 @@ for record in SeqIO.parse(open(OPT_INPUT_FILE, "rU"), "fasta"):
 for i in range(0,len(msa)):
     j = 0
     while j != i:
-        number_of_identical_characters = CalculateIdenticalCharacters(msa[i][2],msa[j][2])
+        number_of_identical_characters,non_identical_characters,characters_facing_gap = CalculateIdenticalAndNonIdenticalCharacters(msa[i][2],msa[j][2])
         pairwise_identity = float(number_of_identical_characters) / float(min(msa[i][1],msa[j][1]))
         
-        print >> OPT_OUTPUT_FILE , "%.8f" %(pairwise_identity)
+        print >> OPT_OUTPUT_FILE ,msa[i][0] + "\t" + msa[j][0]  + "\t" + "%.8f" %(pairwise_identity) + "\t" + str(non_identical_characters) + "\t" + str(characters_facing_gap)
         j = j + 1
 
